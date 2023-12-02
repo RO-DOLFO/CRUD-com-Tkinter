@@ -1,12 +1,12 @@
 import mysql.connector
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import ttk, messagebox
 
 try:
     conexao = mysql.connector.connect(
         host = 'localhost',
         user = 'root',
-        password = '123456',
+        password = '',
         database = 'teste'
     )
 except mysql.connector.Error as erro:
@@ -14,6 +14,19 @@ except mysql.connector.Error as erro:
     
 
 cursor = conexao.cursor()
+
+
+def carregar_dados():
+    try:
+        tree.delete(*tree.get_children())  # Limpa os itens existentes no TreeView
+        comando = f'SELECT * FROM pessoa;'
+        cursor.execute(comando)
+        resultado = cursor.fetchall()
+        for row in resultado:
+            tree.insert('', 'end', values=row)
+    except mysql.connector.Error as erro:
+        messagebox.showerror('Erro', f'Erro {erro}')
+
 
 def inserir_dados():
     try:
@@ -29,11 +42,16 @@ def inserir_dados():
 
 
 def mostrar_dados():
-    comando=f'SELECT * FROM pessoa;'
-    cursor.execute(comando)
-    resultado = cursor.fetchall()
-    for i in resultado:
-        print(i)
+    try:
+        comando=f'SELECT * FROM pessoa;'
+        cursor.execute(comando)
+        resultado = cursor.fetchall()
+        for i in resultado:
+            print(i)
+        messagebox.showinfo('Info', 'Mostrando no terminal')
+    except mysql.connector.Error as erro:
+        messagebox.showerror('Erro', f'Erro {erro}')
+
 
 def atualiza_dados():
     try:
@@ -48,15 +66,20 @@ def atualiza_dados():
 
 
 def deletar_dados():
-    valor = txt_id.get()
-    comando= f'DELETE FROM pessoa WHERE id_pessoa = {valor}'
-    cursor.execute(comando)
-    conexao.commit()
+    try:
+        valor = txt_id.get()
+        comando= f'DELETE FROM pessoa WHERE id_pessoa = {valor}'
+        cursor.execute(comando)
+        conexao.commit()
+        messagebox.showinfo('Info', 'Deletado com sucesso')
+    except mysql.connector.Error as erro:
+        messagebox.showerror('Erro', f'Erro {erro}')
+
 
 
 janela = tk.Tk()
 janela.title('Tela de teste')
-janela.geometry('400x400')
+janela.geometry('800x800')
 
 lbl_id = tk.Label(janela, text='Id:')
 lbl_id.place(x=10, y=10)
@@ -81,5 +104,19 @@ btn_atualizar.place(x=10, y=160)
 
 btn_deletar = tk.Button(janela, text='Deletar', command=deletar_dados)
 btn_deletar.place(x=10, y=190)
+
+
+tree = ttk.Treeview(janela, columns=("ID", "Nome"))
+tree.heading("#0", text="ID")
+tree.heading("ID", text="ID")
+tree.heading("Nome", text="Nome")
+
+# Posiciona o Treeview na janela
+tree.place(x=200, y=10, height=200, width=200)
+
+# Adiciona um botão para recarregar os dados no Treeview
+btn_recarregar = tk.Button(janela, text='Recarregar Dados', command=carregar_dados)
+btn_recarregar.place(x=150, y=220)
+
 
 janela.mainloop()
